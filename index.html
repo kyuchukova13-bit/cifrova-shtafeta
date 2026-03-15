@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <title>Цифрова Щафета - Подобрен Дизайн</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #2c3e50;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        h1 { margin-top: 15px; font-size: 2.8rem; color: #ecf0f1; text-shadow: 3px 3px #000; margin-bottom: 5px; }
+        
+        /* ГЛАВНО МЕНЮ */
+        #start-screen {
+            position: fixed; inset: 0;
+            background: radial-gradient(circle, #34495e, #2c3e50);
+            z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+        }
+
+        .start-instructions {
+            color: #ecf0f1; font-size: 1.2rem; background: rgba(0,0,0,0.4);
+            padding: 25px; border-radius: 20px; margin-bottom: 30px;
+            max-width: 700px; text-align: left; border-left: 5px solid #3498db; line-height: 1.6;
+        }
+
+        .level-select-row { display: flex; gap: 25px; }
+        .level-btn {
+            padding: 18px 50px; font-size: 1.6rem; cursor: pointer;
+            border-radius: 15px; border: none; font-weight: bold; transition: 0.2s; color: white;
+        }
+        #btn-lvl1 { background: #3498db; box-shadow: 0 6px 0 #2980b9; } 
+        #btn-lvl2 { background: #1a237e; box-shadow: 0 6px 0 #0d1440; }
+
+        /* ИГРАЛНА ЗОНА */
+        .game-layout {
+            display: flex; width: 98%; max-width: 1400px;
+            justify-content: space-between; align-items: center; flex: 1; margin-bottom: 20px;
+        }
+
+        .player-indicator {
+            width: 200px; padding: 20px 10px; border-radius: 20px;
+            text-align: center; font-size: 1.8rem; font-weight: 900;
+            transition: all 0.3s ease; opacity: 0.2; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+        #p1-indicator { background: #007bff; border: 4px solid #0056b3; }
+        #p2-indicator { background: #dc3545; border: 4px solid #a71d2a; }
+        .player-indicator.active { opacity: 1; transform: scale(1.1); box-shadow: 0 0 30px rgba(255,255,255,0.3); }
+
+        .grid { display: grid; grid-gap: 12px; margin-top: 5px; }
+        .card {
+            background: #34495e; border-radius: 15px; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; cursor: pointer; position: relative; transform-style: preserve-3d; transition: transform 0.5s;
+            box-shadow: inset 0 5px 10px rgba(255,255,255,0.1), inset 0 -5px 10px rgba(0,0,0,0.5), 0 10px 20px rgba(0,0,0,0.5);
+        }
+        .card.flipped { transform: rotateY(180deg); background: #ecf0f1; color: #2c3e50; }
+        .card-front, .card-back { position: absolute; backface-visibility: hidden; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; border-radius: 15px; }
+        .card-back { transform: rotateY(180deg); }
+
+        /* ПОДОБРЕН ЕКРАН ЗА ПОБЕДА */
+        #victory-screen {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 300;
+        }
+        .win-box { 
+            background: #2c3e50; padding: 50px; border-radius: 30px; text-align: center; 
+            border: 4px solid #ecf0f1; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .win-title { font-size: 3.5rem; margin-bottom: 10px; font-weight: 900; }
+        .win-player-name { font-size: 2.5rem; margin-bottom: 30px; padding: 10px; border-radius: 10px; display: inline-block; }
+        
+        .win-buttons { display: flex; gap: 20px; justify-content: center; }
+        .win-box button { 
+            padding: 15px 40px; font-size: 1.3rem; cursor: pointer; border-radius: 12px; 
+            border: none; font-weight: bold; color: white; transition: 0.2s;
+        }
+        .btn-again { background: #27ae60; box-shadow: 0 5px 0 #1e8449; }
+        .btn-menu { background: #7f8c8d; box-shadow: 0 5px 0 #636e72; }
+        .win-box button:hover { transform: translateY(-3px); filter: brightness(1.1); }
+
+        .author-credit { position: absolute; bottom: 15px; right: 20px; font-size: 1rem; color: rgba(255,255,255,0.4); font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen">
+        <h1>ЦИФРОВА ЩАФЕТА</h1>
+        <div class="start-instructions">
+            <strong>ИНСТРУКЦИИ ЗА ИГРА:</strong><br><br>
+            • Цел: Отворете последователно цифрите от 1 до края.<br>
+            • Ако отворите вярната цифра, продължавате своя ход.<br>
+            • При грешка – всички карти се обръщат и редът се сменя.<br>
+            • Трябва да започнете отново от 1 при всеки нов опит.
+        </div>
+        <div class="level-select-row">
+            <button id="btn-lvl1" class="level-btn" onclick="startGame(3)">НИВО 1 (3х3)</button>
+            <button id="btn-lvl2" class="level-btn" onclick="startGame(4)">НИВО 2 (4х4)</button>
+        </div>
+        <div class="author-credit">Автор: Дочка Кючукова</div>
+    </div>
+
+    <h1>ЦИФРОВА ЩАФЕТА</h1>
+    
+    <div class="game-layout">
+        <div id="p1-indicator" class="player-indicator active">ИГРАЧ 1</div>
+        <div class="card-container">
+            <div style="margin-bottom: 10px; font-size: 1.5rem; color: #f1c40f;">
+                СЛЕДВАЩА: <span id="next-num" style="font-size: 2.2rem; font-weight: bold;">1</span>
+            </div>
+            <div class="grid" id="game-grid"></div>
+        </div>
+        <div id="p2-indicator" class="player-indicator">ИГРАЧ 2</div>
+    </div>
+
+    <div id="victory-screen">
+        <div class="win-box">
+            <div class="win-title">ПОБЕДА!</div>
+            <div id="winner-display" class="win-player-name"></div>
+            <div class="win-buttons">
+                <button class="btn-again" onclick="restartLevel()">НОВА ИГРА</button>
+                <button class="btn-menu" onclick="goToMenu()">КЪМ МЕНЮ</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="author-credit">Автор: Дочка Кючукова</div>
+
+    <script>
+        let currentPlayer = 1;
+        let nextRequiredValue = 1;
+        let isProcessing = false;
+        let currentSize = 3;
+
+        function startGame(size) {
+            currentSize = size;
+            document.getElementById('start-screen').style.display = 'none';
+            resetGame();
+        }
+
+        function createBoard() {
+            const grid = document.getElementById('game-grid');
+            grid.innerHTML = '';
+            const cardSize = currentSize === 3 ? 140 : 105;
+            grid.style.gridTemplateColumns = `repeat(${currentSize}, ${cardSize}px)`;
+            const total = currentSize * currentSize;
+            let numbers = [];
+            for(let i=1; i<=total; i++) numbers.push(i);
+            numbers.sort(() => Math.random() - 0.5);
+            numbers.forEach(num => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style.width = cardSize + 'px'; card.style.height = cardSize + 'px';
+                card.style.fontSize = (cardSize/2.5) + 'px';
+                card.dataset.value = num;
+                card.innerHTML = `<div class="card-front">?</div><div class="card-back">${num}</div>`;
+                card.onclick = () => handleCardClick(card);
+                grid.appendChild(card);
+            });
+        }
+
+        function handleCardClick(card) {
+            if (isProcessing || card.classList.contains('flipped')) return;
+            const val = parseInt(card.dataset.value);
+            card.classList.add('flipped');
+            if (val === nextRequiredValue) {
+                if (nextRequiredValue === currentSize * totalSize()) { // Корекция тук за сигурност
+                    setTimeout(showVictory, 500);
+                } else {
+                    nextRequiredValue++;
+                    document.getElementById('next-num').innerText = nextRequiredValue;
+                }
+            } else {
+                isProcessing = true;
+                setTimeout(() => {
+                    document.querySelectorAll('.card').forEach(c => c.classList.remove('flipped'));
+                    currentPlayer = (currentPlayer === 1) ? 2 : 1;
+                    nextRequiredValue = 1;
+                    updateUI();
+                    isProcessing = false;
+                }, 1000);
+            }
+        }
+
+        function totalSize() { return currentSize; } // Помощна функция
+
+        function updateUI() {
+            document.getElementById('p1-indicator').classList.toggle('active', currentPlayer === 1);
+            document.getElementById('p2-indicator').classList.toggle('active', currentPlayer === 2);
+            document.getElementById('next-num').innerText = nextRequiredValue;
+        }
+
+        function showVictory() {
+            const winnerName = document.getElementById('winner-display');
+            winnerName.innerText = `ИГРАЧ ${currentPlayer}`;
+            winnerName.style.color = (currentPlayer === 1) ? '#007bff' : '#dc3545';
+            winnerName.style.border = `2px solid ${(currentPlayer === 1) ? '#007bff' : '#dc3545'}`;
+            document.getElementById('victory-screen').style.display = 'flex';
+        }
+
+        function resetGame() {
+            currentPlayer = 1; nextRequiredValue = 1;
+            updateUI(); createBoard();
+        }
+
+        function restartLevel() {
+            document.getElementById('victory-screen').style.display = 'none';
+            resetGame();
+        }
+
+        function goToMenu() {
+            document.getElementById('victory-screen').style.display = 'none';
+            document.getElementById('start-screen').style.display = 'flex';
+        }
+
+        // Корекция в логиката за проверка на край
+        function handleCardClick(card) {
+            if (isProcessing || card.classList.contains('flipped')) return;
+            const val = parseInt(card.dataset.value);
+            card.classList.add('flipped');
+            if (val === nextRequiredValue) {
+                if (nextRequiredValue === currentSize * currentSize) {
+                    setTimeout(showVictory, 500);
+                } else {
+                    nextRequiredValue++;
+                    document.getElementById('next-num').innerText = nextRequiredValue;
+                }
+            } else {
+                isProcessing = true;
+                setTimeout(() => {
+                    document.querySelectorAll('.card').forEach(c => c.classList.remove('flipped'));
+                    currentPlayer = (currentPlayer === 1) ? 2 : 1;
+                    nextRequiredValue = 1;
+                    updateUI();
+                    isProcessing = false;
+                }, 1000);
+            }
+        }
+    </script>
+</body>
+</html>
